@@ -1,7 +1,7 @@
 {
-  "name": "LedgerOS — Professional Accounting",
+  "name": "LedgerOS — Full Bookkeeping",
   "short_name": "LedgerOS",
-  "description": "Beautiful, modern accounting for freelancers and small businesses. Invoices, expenses, clients, reports, and more.",
+  "description": "Complete privacy-first bookkeeping: Chart of Accounts, Journal, Invoices, Bills, Payroll, Budgets, Estimates & full Reports.",
   "start_url": "./ledgeros.html",
   "display": "standalone",
   "background_color": "#0f1117",

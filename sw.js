@@ -1,5 +1,5 @@
-// LedgerOS Service Worker — basic offline support
-const CACHE_NAME = 'ledgeros-v2.1';
+// LedgerOS Service Worker — offline support (v3.0)
+const CACHE_NAME = 'ledgeros-v3.0';
 const ASSETS = [
   './ledgeros.html',
   './manifest.json',
@@ -9,27 +9,60 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) =>
+        Promise.allSettled(
+          ASSETS.map((url) =>
+            cache.add(url).catch((err) => {
+              console.warn('LedgerOS SW: failed to cache', url, err);
+            })
+          )
+        )
+      )
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter((k) => k !== CACHE_NAME)
+          .map((k) => caches.delete(k))
+      )
     ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network-first for HTML, cache-first for others
-  if (event.request.mode === 'navigate' || event.request.url.endsWith('.html')) {
+  const req = event.request;
+
+  // Network-first for navigation / HTML so updates are picked up quickly
+  if (req.mode === 'navigate' || req.url.endsWith('.html')) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('./ledgeros.html'))
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put('./ledgeros.html', copy));
+          return res;
+        })
+        .catch(() => caches.match('./ledgeros.html'))
     );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then((cached) => cached || fetch(event.request))
-    );
+    return;
   }
+
+  // Cache-first for everything else
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req).then((res) => {
+        if (res && res.status === 200 && (req.url.startsWith(self.location.origin) || req.url.includes('cdnjs') || req.url.includes('fonts.googleapis'))) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+        }
+        return res;
+      }).catch(() => cached);
+    })
+  );
 });

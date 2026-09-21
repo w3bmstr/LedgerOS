@@ -1,10 +1,12 @@
-// LedgerOS Service Worker — offline support (v3.0)
-const CACHE_NAME = 'ledgeros-v3.0';
+// LedgerOS Service Worker — offline support (v5.0)
+const CACHE_NAME = 'ledgeros-v5.0';
 const ASSETS = [
   './ledgeros.html',
   './manifest.json',
   'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js'
 ];
 
 self.addEventListener('install', (event) => {
